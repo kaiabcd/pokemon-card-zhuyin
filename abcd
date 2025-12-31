@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美容服務預約</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+        .service-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;}
+        .btn { display: block; width: 100%; padding: 15px; background-color: #d4a373; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 20px;}
+        .slot-btn { background: white; border: 1px solid #d4a373; color: #d4a373; padding: 10px; margin: 5px; border-radius: 5px; width: 30%; }
+        .slot-btn.selected { background: #d4a373; color: white; }
+        #slots-container { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px;}
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="step1">
+        <h3>1. 選擇服務項目</h3>
+        <div class="service-item">
+            <label>腋下除毛 (15分)</label>
+            <input type="checkbox" class="service-check" data-name="腋下除毛" data-time="15">
+        </div>
+        <div class="service-item">
+            <label>私密處全除 (60分)</label>
+            <input type="checkbox" class="service-check" data-name="私密處全除" data-time="60">
+        </div>
+        <div class="service-item">
+            <label>小腿除毛 (30分)</label>
+            <input type="checkbox" class="service-check" data-name="小腿除毛" data-time="30">
+        </div>
+        <div style="margin-top:20px;">總時長: <span id="total-time">0</span> 分鐘</div>
+        <button class="btn" onclick="getSlots()">查詢空檔</button>
+    </div>
+
+    <div id="step2" class="hidden">
+        <h3>2. 選擇時段</h3>
+        <div id="loading">讀取行事曆中...</div>
+        <div id="slots-container"></div>
+    </div>
+
+    <div id="step3" class="hidden">
+        <h3>3. 確認預約</h3>
+        <p>服務：<span id="confirm-services"></span></p>
+        <p>時間：<span id="confirm-time"></span></p>
+        <div style="margin-bottom:15px;">
+            <input type="text" id="customer-name" placeholder="請輸入您的稱呼" style="width:90%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+        </div>
+        <button class="btn" onclick="submitBooking()">確認送出</button>
+    </div>
+
+    <script>
+        let totalDuration = 0;
+        let selectedServices = [];
+        let selectedSlot = null;
+
+        // 初始化 LIFF
+        liff.init({ liffId: "YOUR_LIFF_ID" }); // 記得換成您的 LIFF ID
+
+        // 監聽勾選事件
+        document.querySelectorAll('.service-check').forEach(item => {
+            item.addEventListener('change', event => {
+                let time = parseInt(event.target.dataset.time);
+                let name = event.target.dataset.name;
+                if(event.target.checked) {
+                    totalDuration += time;
+                    selectedServices.push(name);
+                } else {
+                    totalDuration -= time;
+                    selectedServices = selectedServices.filter(s => s !== name);
+                }
+                document.getElementById('total-time').innerText = totalDuration;
+            });
+        });
+
+        // 呼叫 n8n 查詢空檔
+        async function getSlots() {
+            if (totalDuration === 0) return alert("請至少選擇一項服務");
+            
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+
+            // 替換成您的 n8n Webhook 1 網址
+            const n8nUrl = "YOUR_N8N_GET_SLOTS_URL" + "?duration=" + totalDuration;
+
+            try {
+                const response = await fetch(n8nUrl);
+                const data = await response.json();
+                renderSlots(data.slots);
+            } catch (e) {
+                alert("查詢失敗，請稍後再試");
+                console.error(e);
+            }
+        }
+
+        function renderSlots(slots) {
+            const container = document.getElementById('slots-container');
+            document.getElementById('loading').classList.add('hidden');
+            container.innerHTML = '';
+
+            if(slots.length === 0) {
+                container.innerHTML = '<p>近期無符合時長的空檔，請聯繫客服。</p>';
+                return;
+            }
+
+            slots.forEach(slot => {
+                const btn = document.createElement('button');
+                btn.className = 'slot-btn';
+                btn.innerText = `${slot.date.slice(5)} ${slot.time}`; // 顯示 MM-DD HH:mm
+                btn.onclick = () => {
+                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedSlot = slot;
+                    goToStep3();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function goToStep3() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            document.getElementById('confirm-services').innerText = selectedServices.join(', ');
+            document.getElementById('confirm-time').innerText = `${selectedSlot.date} ${selectedSlot.time}`;
+        }
+
+        // 送出預約
+        async function submitBooking() {
+            const name = document.getElementById('customer-name').value;
+            if(!name) return alert("請輸入稱呼");
+
+            const bookingData = {
+                name: name,
+                services: selectedServices.join(', '),
+                duration: totalDuration,
+                datetime: selectedSlot.datetime,
+                date: selectedSlot.date,
+                time: selectedSlot.time
+            };
+
+            // 替換成您的 n8n Webhook 2 網址
+            const n8nBookingUrl = "YOUR_N8N_BOOKING_URL";
+
+            try {
+                await fetch(n8nBookingUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(bookingData)
+                });
+                alert("預約成功！請查看 LINE 通知");
+                liff.closeWindow();
+            } catch (e) {
+                alert("預約發生錯誤");
+            }
+        }
+    </script>
+</body>
+</html>
