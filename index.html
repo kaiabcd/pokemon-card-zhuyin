@@ -2,26 +2,45 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>寶可夢識字大圖鑑 (注音版)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>寶可夢字卡APP(注音) APP</title>
+
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/287/287221.png">
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/287/287221.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="寶可夢圖鑑">
+
+<meta name="theme-color" content="#f0f8ff">
+
 <style>
+  /* APP 優化設定 */
+  * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
   body {
     font-family: "Microsoft JhengHei", "PMingLiU", sans-serif;
     background-color: #f0f8ff;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
+    /* 避開手機劉海 */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    overflow: hidden; 
   }
 
-  h1 { margin: 10px 0 20px 0; font-size: 1.5rem; text-align: center; color: #333; }
+  h1 { margin: 10px 0 15px 0; font-size: 1.5rem; text-align: center; color: #333; }
 
   /* 卡片場景 */
   .scene {
-    width: 340px; height: 340px;
+    width: 320px; height: 320px;
     perspective: 1000px; cursor: pointer;
     margin-bottom: 20px; position: relative; z-index: 1;
   }
   
   @media (min-width: 600px) { .scene { width: 400px; height: 400px; } }
+  /* 小螢幕適配 */
+  @media (max-height: 700px) { .scene { width: 280px; height: 280px; } }
 
   .card {
     width: 100%; height: 100%; position: relative;
@@ -49,70 +68,24 @@
     justify-content: center;
   }
 
-  /* --- 標準注音排版 CSS 開始 --- */
-  
-  /* 單字區塊 (國字 + 注音群) */
-  .char-block {
-    display: inline-flex;
-    align-items: center;
-    margin: 0 4px; /* 字距 */
+  /* --- 標準直式注音排版 CSS --- */
+  .char-block { display: inline-flex; align-items: center; margin: 0 4px; }
+  .char-text { font-size: 60px; line-height: 1; margin-right: 2px; }
+  .zhuyin-group { display: flex; flex-direction: row; height: 100%; align-items: center; }
+  .zhuyin-symbols { display: flex; flex-direction: column; line-height: 1; align-items: center; }
+  .zhuyin-char { 
+    font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; 
+    font-weight: normal; color: #555; height: 18px; 
+    display: flex; align-items: center; justify-content: center; 
   }
+  .zhuyin-tone { display: flex; flex-direction: column; justify-content: center; margin-left: 2px; height: 100%; }
+  .zhuyin-tone-char { font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; font-weight: normal; color: #555; }
 
-  /* 左側：國字 */
-  .char-text {
-    font-size: 60px;
-    line-height: 1;
-    margin-right: 2px;
-  }
-
-  /* 右側：注音群 (包含符號欄與聲調欄) */
-  .zhuyin-group {
-    display: flex;
-    flex-direction: row; /* 符號在左，聲調在右 */
-    height: 100%;
-    align-items: center;
-  }
-
-  /* 符號欄 (ㄅㄆㄇ...) 直排 */
-  .zhuyin-symbols {
-    display: flex;
-    flex-direction: column;
-    line-height: 1;
-    align-items: center;
-  }
-
-  /* 符號本體 */
-  .zhuyin-char {
-    font-size: 16px;
-    font-family: "Bopomofo", "Microsoft JhengHei", sans-serif;
-    font-weight: normal;
-    color: #555;
-    height: 18px; /* 固定高度確保對齊 */
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* 聲調欄 (ˊˇˋ˙) 在右側 */
-  .zhuyin-tone {
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* 聲調垂直置中 */
-    margin-left: 2px;
-    height: 100%;
-  }
-
-  .zhuyin-tone-char {
-    font-size: 16px;
-    font-family: "Bopomofo", "Microsoft JhengHei", sans-serif;
-    font-weight: normal;
-    color: #555;
-  }
-
-  /* 手機版微調 */
+  /* 手機版字體微調 */
   @media (max-width: 400px) {
     .char-text { font-size: 45px; }
     .zhuyin-char, .zhuyin-tone-char { font-size: 14px; height: 16px; }
   }
-  /* --- 標準注音排版 CSS 結束 --- */
 
   .card-id-hint {
     font-size: 14px; color: #666; margin-bottom: 20px; font-weight: normal; text-shadow: none;
@@ -123,11 +96,7 @@
   .card__face--back img { width: 90%; height: 90%; object-fit: contain; }
 
   /* 按鈕區 */
-  .controls {
-    display: flex; gap: 10px; flex-wrap: wrap;
-    justify-content: center; width: 100%; max-width: 500px; z-index: 10;
-  }
-
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px; z-index: 10; margin-bottom: 10px; }
   button {
     padding: 12px 20px; font-size: 16px; border: none;
     border-radius: 50px; color: white; cursor: pointer;
@@ -135,44 +104,21 @@
     flex: 1 1 80px; transition: 0.2s;
   }
   button:active { transform: scale(0.95); }
-  
   .nav-btn { background-color: #2196F3; }
   .rand-btn { background-color: #ff9800; flex: 2; }
-  .list-btn { background-color: #9c27b0; flex: 100%; margin-top: 5px; }
+  
+  .list-btn-container { width: 100%; max-width: 500px; display: flex; justify-content: center; }
+  .list-btn { background-color: #9c27b0; width: 100%; margin-top: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-  .counter { margin-top: 15px; font-size: 14px; color: #666; font-weight: bold;}
+  .counter { margin-top: 15px; font-size: 14px; color: #666; font-weight: bold; margin-bottom: 15px;}
 
   /* 彈出清單視窗 */
-  .modal {
-    display: none; position: fixed; z-index: 999; left: 0; top: 0;
-    width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
-    align-items: center; justify-content: center;
-  }
-  
-  .modal-content {
-    background-color: white; width: 90%; max-width: 600px; height: 80%;
-    border-radius: 15px; display: flex; flex-direction: column;
-    overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  }
-
-  .modal-header {
-    padding: 15px; background: #2196F3; color: white;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 1.2rem; font-weight: bold;
-  }
-
+  .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+  .modal-content { background-color: white; width: 90%; max-width: 600px; height: 80%; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+  .modal-header { padding: 15px; background: #2196F3; color: white; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; }
   .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-
-  .modal-body {
-    padding: 10px; overflow-y: auto; flex: 1;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;
-  }
-
-  .list-item {
-    background: #f1f1f1; padding: 10px 5px; border-radius: 8px;
-    text-align: center; cursor: pointer; font-size: 14px;
-    border: 1px solid #ddd; transition: background 0.2s;
-  }
+  .modal-body { padding: 10px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+  .list-item { background: #f1f1f1; padding: 10px 5px; border-radius: 8px; text-align: center; cursor: pointer; font-size: 14px; border: 1px solid #ddd; transition: background 0.2s; }
   .list-item:hover { background: #e0e0e0; border-color: #999; }
   .list-item span { display: block; color: #666; font-size: 12px; margin-bottom: 2px;}
 
@@ -180,7 +126,7 @@
 </head>
 <body>
 
-  <h1>寶可夢識字大圖鑑 (注音)</h1>
+  <h1>寶可夢角色</h1>
 
   <div class="scene" onclick="flipCard()">
     <div class="card" id="card">
@@ -200,6 +146,9 @@
     <button class="nav-btn" onclick="prevCard()">◀ 上一張</button>
     <button class="rand-btn" onclick="randomCard()">🎲 隨機</button>
     <button class="nav-btn" onclick="nextCard()">下一張 ▶</button>
+  </div>
+  
+  <div class="list-btn-container">
     <button class="list-btn" onclick="toggleList()">📜 查看全部清單</button>
   </div>
 
@@ -214,7 +163,30 @@
   </div>
 
 <script>
-  // 1. 注音字典 (Pokemon 常用字)
+  // 4. 動態生成 Manifest (Android APP 支援)
+  const manifest = {
+    "name": "寶可夢圖鑑",
+    "short_name": "寶可夢",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#f0f8ff",
+    "theme_color": "#f0f8ff",
+    "icons": [
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/287/287221.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  const linkTag = document.createElement('link');
+  linkTag.rel = 'manifest';
+  linkTag.href = manifestURL;
+  document.head.appendChild(linkTag);
+
+  // 1. 注音字典
   const zhuyinMap = {
     '妙':'ㄇㄧㄠˋ', '蛙':'ㄨㄚ', '種':'ㄓㄨㄥˇ', '子':'ㄗˇ', '草':'ㄘㄠˇ', '花':'ㄏㄨㄚ', '小':'ㄒㄧㄠˇ',
     '火':'ㄏㄨㄛˇ', '龍':'ㄌㄨㄥˊ', '恐':'ㄎㄨㄥˇ', '噴':'ㄆㄣ', '傑':'ㄐㄧㄝˊ', '尼':'ㄋㄧˊ', '龜':'ㄍㄨㄟ',
@@ -375,7 +347,7 @@
     '歹':'ㄉㄞˇ', '郎':'ㄌㄤˊ', '不':'ㄅㄨˋ', '倒':'ㄉㄠˇ', '翁':'ㄨㄥ'
   };
 
-  // 2. 完整資料庫
+  // 2. 完整資料庫 (加入 No.557 石居蟹)
   const gen1 = [
     "妙蛙種子","妙蛙草","妙蛙花","小火龍","火恐龍","噴火龍","傑尼龜","卡咪龜","水箭龜","綠毛蟲",
     "鐵甲蛹","巴大蝶","獨角蟲","鐵殼蛹","大針蜂","波波","比比鳥","大比鳥","小拉達","拉達",
@@ -528,10 +500,10 @@
     randomCard();
   }
 
-  // ★ 核心渲染邏輯修正：分離聲調與符號 ★
+  // ★ 核心渲染邏輯：分離聲調與符號 ★
   function renderZhuyin(text) {
     let html = '';
-    const tones = ['ˊ', 'ˇ', 'ˋ', '˙']; // 聲調符號列表
+    const tones = ['ˊ', 'ˇ', 'ˋ', '˙']; 
 
     for (let char of text) {
       const fullZhuyin = zhuyinMap[char] || '';
@@ -539,7 +511,6 @@
       let symbols = '';
       let toneMark = '';
 
-      // 解析注音字串，分離符號與聲調
       for (let z of fullZhuyin) {
         if (tones.includes(z)) {
           toneMark = z;
@@ -548,16 +519,13 @@
         }
       }
 
-      // 生成符號欄 HTML (直排)
       let symbolsHtml = '';
       for (let s of symbols) {
         symbolsHtml += `<div class="zhuyin-char">${s}</div>`;
       }
 
-      // 生成聲調欄 HTML (單一符號，置中)
       let toneHtml = `<div class="zhuyin-tone-char">${toneMark}</div>`;
 
-      // 組合：左字 + (中符號 + 右聲調)
       html += `
         <div class="char-block">
           <div class="char-text">${char}</div>
@@ -578,7 +546,6 @@
     setTimeout(() => {
       const data = pokemonData[currentIndex];
       
-      // 使用新的直排注音渲染
       textContainer.innerHTML = renderZhuyin(data.name);
       
       idHintElement.innerText = `No. ${data.id}`;
