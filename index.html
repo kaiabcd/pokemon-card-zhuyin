@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>寶可夢字卡APP(注音) APP</title>
+<title>寶可夢識字大圖鑑</title>
 
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/287/287221.png">
 <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/287/287221.png">
@@ -16,107 +16,162 @@
 
 <style>
   /* APP 優化設定 */
-  * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  * { 
+    touch-action: manipulation; 
+    -webkit-tap-highlight-color: transparent; 
+    user-select: none; /* 禁止選取文字 */
+    -webkit-user-select: none;
+  }
 
   body {
     font-family: "Microsoft JhengHei", "PMingLiU", sans-serif;
     background-color: #f0f8ff;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
+    height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
     /* 避開手機劉海 */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden; 
   }
 
-  h1 { margin: 10px 0 15px 0; font-size: 1.5rem; text-align: center; color: #333; }
-
-  /* 卡片場景 */
+  /* 卡片容器 */
   .scene {
-    width: 320px; height: 320px;
-    perspective: 1000px; cursor: pointer;
-    margin-bottom: 20px; position: relative; z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    flex: 1; /* 佔據剩餘高度 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    margin-top: 10px;
   }
-  
-  @media (min-width: 600px) { .scene { width: 400px; height: 400px; } }
-  /* 小螢幕適配 */
-  @media (max-height: 700px) { .scene { width: 280px; height: 280px; } }
 
   .card {
-    width: 100%; height: 100%; position: relative;
-    transition: transform 0.6s; transform-style: preserve-3d;
-    border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    width: 100%; 
+    height: 100%; 
+    background: white;
+    border-radius: 25px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border: 6px solid #fff;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* 上下排列 */
+    overflow: hidden;
+    position: relative;
   }
 
-  .card.is-flipped { transform: rotateY(180deg); }
-
-  .card__face {
-    position: absolute; width: 100%; height: 100%;
-    backface-visibility: hidden; -webkit-backface-visibility: hidden;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 20px; border: 5px solid white;
-    box-sizing: border-box; background-color: white;
-  }
-
-  /* 正面：文字容器 */
-  .card__face--front {
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-    color: #333; 
-    font-weight: bold;
-    text-align: center; padding: 10px;
-    display: flex; flex-direction: column;
+  /* 上半部：圖片區 */
+  .card-image-area {
+    flex: 1.5; /* 權重較大，讓圖片大一點 */
+    background-color: #fdfdfd;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    position: relative; /* 為了讓按鈕絕對定位 */
+    border-bottom: 2px dashed #eee;
   }
 
-  /* --- 標準直式注音排版 CSS --- */
-  .char-block { display: inline-flex; align-items: center; margin: 0 4px; }
-  .char-text { font-size: 60px; line-height: 1; margin-right: 2px; }
-  .zhuyin-group { display: flex; flex-direction: row; height: 100%; align-items: center; }
-  .zhuyin-symbols { display: flex; flex-direction: column; line-height: 1; align-items: center; }
-  .zhuyin-char { 
-    font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; 
-    font-weight: normal; color: #555; height: 18px; 
-    display: flex; align-items: center; justify-content: center; 
-  }
-  .zhuyin-tone { display: flex; flex-direction: column; justify-content: center; margin-left: 2px; height: 100%; }
-  .zhuyin-tone-char { font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; font-weight: normal; color: #555; }
-
-  /* 手機版字體微調 */
-  @media (max-width: 400px) {
-    .char-text { font-size: 45px; }
-    .zhuyin-char, .zhuyin-tone-char { font-size: 14px; height: 16px; }
+  .card-image-area img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1));
   }
 
   .card-id-hint {
-    font-size: 14px; color: #666; margin-bottom: 20px; font-weight: normal; text-shadow: none;
-    position: absolute; top: 15px; left: 0; right: 0;
+    position: absolute;
+    top: 15px; left: 20px;
+    font-size: 16px; color: #999; font-weight: bold;
+    background: rgba(255,255,255,0.8);
+    padding: 2px 8px;
+    border-radius: 10px;
   }
 
-  .card__face--back { background-color: #fdfdfd; transform: rotateY(180deg); }
-  .card__face--back img { width: 90%; height: 90%; object-fit: contain; }
+  /* 修改：發音按鈕改為絕對定位在圖片區右下角 */
+  .speak-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #FF9800;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+    z-index: 5;
+  }
+  .speak-btn:active { transform: scale(0.9); background: #F57C00; }
 
+  /* 下半部：文字區 */
+  .card-text-area {
+    flex: 0.8; /* 稍微縮小文字區比例，把空間給圖片 */
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    overflow: hidden; /* 防止溢出 */
+  }
+
+  /* 名字與注音容器 */
+  #cardTextContainer {
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    flex-wrap: nowrap; /* 強制不換行 */
+    width: 100%;
+  }
+
+  /* --- 修改：縮小字體以適應單行顯示 --- */
+  .char-block { display: inline-flex; align-items: center; margin: 0 2px; } /* 縮小間距 */
+  
+  /* 電腦/平板版字體 */
+  .char-text { font-size: 48px; line-height: 1; margin-right: 2px; color: #333; }
+  .zhuyin-char { 
+    font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; 
+    font-weight: normal; color: #666; height: 18px; 
+    display: flex; align-items: center; justify-content: center; 
+  }
+  .zhuyin-tone-char { font-size: 16px; font-family: "Bopomofo", "Microsoft JhengHei", sans-serif; font-weight: normal; color: #666; }
+
+  /* 手機版字體微調：確保 5-6 個字的名稱也能塞進一行 */
+  @media (max-width: 400px) {
+    .char-text { font-size: 34px; } /* 縮小主字體 */
+    .zhuyin-char, .zhuyin-tone-char { font-size: 12px; height: 14px; } /* 縮小注音 */
+    .char-block { margin: 0 1px; } /* 極小間距 */
+    .speak-btn { width: 42px; height: 42px; font-size: 20px; } /* 手機版按鈕稍小 */
+  }
+
+  .zhuyin-group { display: flex; flex-direction: row; height: 100%; align-items: center; }
+  .zhuyin-symbols { display: flex; flex-direction: column; line-height: 1; align-items: center; }
+  .zhuyin-tone { display: flex; flex-direction: column; justify-content: center; margin-left: 0px; height: 100%; }
+  
   /* 按鈕區 */
-  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px; z-index: 10; margin-bottom: 10px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px; z-index: 10; margin-bottom: 5px; }
   button {
-    padding: 12px 20px; font-size: 16px; border: none;
+    padding: 15px 20px; font-size: 18px; border: none;
     border-radius: 50px; color: white; cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: inherit; font-weight: bold;
     flex: 1 1 80px; transition: 0.2s;
   }
   button:active { transform: scale(0.95); }
   .nav-btn { background-color: #2196F3; }
-  .rand-btn { background-color: #ff9800; flex: 2; }
+  .rand-btn { background-color: #4CAF50; flex: 1.5; }
   
-  .list-btn-container { width: 100%; max-width: 500px; display: flex; justify-content: center; }
-  .list-btn { background-color: #9c27b0; width: 100%; margin-top: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
-  .counter { margin-top: 15px; font-size: 14px; color: #666; font-weight: bold; margin-bottom: 15px;}
+  .list-btn-container { width: 100%; max-width: 500px; display: flex; justify-content: center; margin-bottom: 10px; }
+  .list-btn { background-color: #9c27b0; width: 100%; margin-top: 5px; padding: 10px; font-size: 16px; }
 
   /* 彈出清單視窗 */
   .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
   .modal-content { background-color: white; width: 90%; max-width: 600px; height: 80%; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
   .modal-header { padding: 15px; background: #2196F3; color: white; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; }
-  .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+  .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; flex: 0; box-shadow: none; }
   .modal-body { padding: 10px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
   .list-item { background: #f1f1f1; padding: 10px 5px; border-radius: 8px; text-align: center; cursor: pointer; font-size: 14px; border: 1px solid #ddd; transition: background 0.2s; }
   .list-item:hover { background: #e0e0e0; border-color: #999; }
@@ -124,32 +179,30 @@
 
 </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-  <h1>寶可夢角色</h1>
-
-  <div class="scene" onclick="flipCard()">
+  <div class="scene">
     <div class="card" id="card">
-      <div class="card__face card__face--front">
+      <div class="card-image-area">
         <div class="card-id-hint" id="cardIdHint">No.---</div>
-        <div id="cardTextContainer" style="display: flex; justify-content: center; flex-wrap: wrap; align-items: center;"></div>
-      </div>
-      <div class="card__face card__face--back">
         <img id="cardImage" src="" alt="Pokemon">
+        <button class="speak-btn" onclick="speakName()">🔊</button>
+      </div>
+      
+      <div class="card-text-area">
+        <div id="cardTextContainer"></div>
       </div>
     </div>
   </div>
 
-  <div class="counter" id="counterDisplay">No. ---</div>
-
   <div class="controls">
-    <button class="nav-btn" onclick="prevCard()">◀ 上一張</button>
-    <button class="rand-btn" onclick="randomCard()">🎲 隨機</button>
-    <button class="nav-btn" onclick="nextCard()">下一張 ▶</button>
+    <button class="nav-btn" onclick="prevCard()">◀ 上一個</button>
+    <button class="rand-btn" onclick="randomCard()">🎲 隨機抽卡</button>
+    <button class="nav-btn" onclick="nextCard()">下一個 ▶</button>
   </div>
   
   <div class="list-btn-container">
-    <button class="list-btn" onclick="toggleList()">📜 查看全部清單</button>
+    <button class="list-btn" onclick="toggleList()">📜 選擇寶可夢</button>
   </div>
 
   <div id="listModal" class="modal">
@@ -163,30 +216,10 @@
   </div>
 
 <script>
-  // 4. 動態生成 Manifest (Android APP 支援)
-  const manifest = {
-    "name": "寶可夢圖鑑",
-    "short_name": "寶可夢",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#f0f8ff",
-    "theme_color": "#f0f8ff",
-    "icons": [
-      {
-        "src": "https://cdn-icons-png.flaticon.com/512/287/287221.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
-  const manifestURL = URL.createObjectURL(manifestBlob);
-  const linkTag = document.createElement('link');
-  linkTag.rel = 'manifest';
-  linkTag.href = manifestURL;
-  document.head.appendChild(linkTag);
+  // 禁止右鍵與長按
+  document.addEventListener('contextmenu', event => event.preventDefault());
 
-  // 1. 注音字典
+  // 1. 注音字典 (維持修正版)
   const zhuyinMap = {
     '妙':'ㄇㄧㄠˋ', '蛙':'ㄨㄚ', '種':'ㄓㄨㄥˇ', '子':'ㄗˇ', '草':'ㄘㄠˇ', '花':'ㄏㄨㄚ', '小':'ㄒㄧㄠˇ',
     '火':'ㄏㄨㄛˇ', '龍':'ㄌㄨㄥˊ', '恐':'ㄎㄨㄥˇ', '噴':'ㄆㄣ', '傑':'ㄐㄧㄝˊ', '尼':'ㄋㄧˊ', '龜':'ㄍㄨㄟ',
@@ -256,7 +289,7 @@
     '歐':'ㄡ', '蓋':'ㄍㄞˋ', '固':'ㄍㄨˋ', '希':'ㄒㄧ', '苗':'ㄇㄧㄠˊ', '林':'ㄌㄧㄣ', '台':'ㄊㄞˊ',
     '猛':'ㄇㄥˇ', '加':'ㄐㄧㄚ', '曼':'ㄇㄢˋ', '姆':'ㄇㄨˇ', '狸':'ㄌㄧˊ', '法':'ㄈㄚˇ', '師':'ㄕ',
     '箱':'ㄒㄧㄤ', '蟀':'ㄕㄨㄞˋ', '勒':'ㄌㄜ', '倫':'ㄌㄨㄣˊ', '琴':'ㄑㄧㄣˊ', '含':'ㄏㄢˊ', '羞':'ㄒㄧㄡ',
-    '苞':'ㄅㄠ', '絲':'ㄙ', '蓋':'ㄍài', '槌':'ㄔㄨㄟˊ', '城':'ㄔㄥˊ', '結':'ㄐㄧㄝˊ', '貴':'ㄍㄨㄟˋ',
+    '苞':'ㄅㄠ', '絲':'ㄙ', '蓋':'ㄍㄞˋ', '槌':'ㄔㄨㄟˊ', '城':'ㄔㄥˊ', '結':'ㄐㄧㄝˊ', '貴':'ㄍㄨㄟˋ',
     '婦':'ㄈㄨˋ', '紳':'ㄕㄣ', '蜜':'ㄇㄧˋ', '帕':'ㄆㄚˋ', '圈':'ㄑㄩㄢ', '鼬':'ㄧㄡˋ', '浮':'ㄈㄨˊ',
     '潛':'ㄑㄧㄢˊ', '櫻':'ㄧㄥ', '無':'ㄨˊ', '殼':'ㄎㄜˊ', '兔':'ㄊㄨˋ', '捲':'ㄐㄩㄢˇ', '耳':'ㄦˇ',
     '烏':'ㄨ', '鴉':'ㄧㄚ', '頭':'ㄊㄡˊ', '魅':'ㄇㄟˋ', '東':'ㄉㄨㄥ', '施':'ㄕ', '鐺':'ㄉㄤ', '響':'ㄒㄧㄤˇ',
@@ -335,19 +368,19 @@
     '納':'ㄋㄚˋ', '噬':'ㄕˋ', '草':'ㄘㄠˇ', '崖':'ㄧㄚˊ', '熱':'ㄖㄜˋ', '辣':'ㄌㄚˋ', '狠':'ㄏㄣˇ',
     '椒':'ㄐㄧㄠ', '滾':'ㄍㄨㄣˇ', '聖':'ㄕㄥˋ', '墓':'ㄇㄨˋ', '揚':'ㄧㄤˊ', '雛':'ㄔㄨˊ', '艷':'ㄧㄢˋ',
     '鴕':'ㄊㄨㄛˊ', '鍛':'ㄉㄨㄢˋ', '巧':'ㄑㄧㄠˇ', '普':'ㄆㄨˇ', '隆':'ㄌㄨㄥˊ', '摩':'ㄇㄛˊ',
-    '托':'ㄊㄨㄛ', '拖':'ㄊㄨㄛ', '蚓':'ㄧㄣˇ', '晶':'ㄐㄧㄥ', '纏':'ㄔㄢˊ', '紅':'ㄏㄨㄥ', '鶴':'ㄏㄜè',
+    '托':'ㄊㄨㄛ', '拖':'ㄊㄨㄛ', '蚓':'ㄧㄣˇ', '晶':'ㄐㄧㄥ', '纏':'ㄔㄢˊ', '紅':'ㄏㄨㄥ', '鶴':'ㄏㄜˋ',
     '鯨':'ㄐㄧㄥ', '浩':'ㄏㄠˋ', '鱈':'ㄒㄩㄝˇ', '吼':'ㄏㄡˇ', '米':'ㄇㄧˇ', '棄':'ㄑㄧˋ', '世':'ㄕˋ',
     '仆':'ㄆㄨ', '將':'ㄐㄧㄤ', '軍':'ㄐㄩㄣ', '雄':'ㄒㄩㄥˊ', '偉':'ㄨㄟˇ', '猛':'ㄇㄥˇ', '惡':'ㄜˋ',
     '振':'ㄓㄣˋ', '爬':'ㄆㄚˊ', '鐵':'ㄊㄧㄝˇ', '轍':'ㄔㄜˋ', '跡':'ㄐㄧ', '袱':'ㄈㄨˊ', '膀':'ㄅㄤˇ',
     '頸':'ㄐㄧㄥˇ', '荊':'ㄐㄧㄥ', '棘':'ㄐㄧˊ', '涼':'ㄌㄧㄤˊ', '脊':'ㄐㄧˇ', '戟':'ㄐㄧˇ', '財':'ㄘㄞˊ',
     '賽':'ㄙㄞˋ', '富':'ㄈㄨˋ', '簡':'ㄐㄧㄢˇ', '蝸':'ㄍㄨㄚ', '鼎':'ㄉㄧㄥˇ', '玉':'ㄩˋ', '轟':'ㄏㄨㄥ',
-    '鳴':'ㄇㄧㄥˊ', '故':'ㄍㄨˋ', '密':'ㄇㄧˋ', '盪':'ㄉㄤˋ', '裹':'ㄍㄨㄛˇ', '斯':'ㄙ', '魔':'ㄇㄛˊ',
-    '粗':'ㄘㄨ', '夠':'ㄍㄡ4', '讚':'ㄗㄢˋ', '願':'ㄩㄢˋ', '增':'ㄗㄥ', '吉':'ㄐㄧˊ', '厄':'ㄜˋ',
+    '鳴':'ㄇㄧㄥˊ', '故':'ㄍㄨˋ', '密':'ㄇㄧˇ', '盪':'ㄉㄤˋ', '裹':'ㄍㄨㄛˇ', '斯':'ㄙ', '魔':'ㄇㄛˊ',
+    '粗':'ㄘㄨ', '夠':'ㄍㄡˋ', '讚':'ㄗㄢˋ', '願':'ㄩㄢˋ', '增':'ㄗㄥ', '吉':'ㄐㄧˊ', '厄':'ㄜˋ',
     '橋':'ㄑㄧㄠˊ', '集':'ㄐㄧˊ', '磐':'ㄆㄢˊ', '太':'ㄊㄞˋ', '巴':'ㄅㄚ', '戈':'ㄍㄜ', '桃':'ㄊㄠˊ',
     '歹':'ㄉㄞˇ', '郎':'ㄌㄤˊ', '不':'ㄅㄨˋ', '倒':'ㄉㄠˇ', '翁':'ㄨㄥ'
   };
 
-  // 2. 完整資料庫 (加入 No.557 石居蟹)
+  // 2. 完整資料庫 (保持原樣)
   const gen1 = [
     "妙蛙種子","妙蛙草","妙蛙花","小火龍","火恐龍","噴火龍","傑尼龜","卡咪龜","水箭龜","綠毛蟲",
     "鐵甲蛹","巴大蝶","獨角蟲","鐵殼蛹","大針蜂","波波","比比鳥","大比鳥","小拉達","拉達",
@@ -489,7 +522,6 @@
   const textContainer = document.getElementById('cardTextContainer');
   const idHintElement = document.getElementById('cardIdHint');
   const imgElement = document.getElementById('cardImage');
-  const counterElement = document.getElementById('counterDisplay');
   const modalElement = document.getElementById('listModal');
   const listContainer = document.getElementById('listContainer');
 
@@ -539,19 +571,53 @@
     return html;
   }
 
-  function flipCard() { cardElement.classList.toggle('is-flipped'); }
+  // 發音功能 (修正版：使用同音字修正破音字問題)
+  function speakName() {
+    const name = pokemonData[currentIndex].name;
+    
+    // ★★★ 發音修正區 ★★★
+    // 建立一個專門給喇叭讀的字串 (speakText)
+    let speakText = name;
+
+    // 如果名字裡有「殼」，唸的時候偷偷換成「咳」(ㄎㄜˊ)，騙語音引擎發這個音
+    // 這樣聽起來就是正確的「甲殼(ㄎㄜˊ)」了
+    if (speakText.includes('殼')) {
+      speakText = speakText.replace(/殼/g, '咳');
+    }
+    // ★★★★★★★★★★★★★
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      
+      // 注意：這裡傳入的是 speakText (替換過的字)，而不是原本的 name
+      const utterance = new SpeechSynthesisUtterance(speakText); 
+      
+      utterance.rate = 0.9; 
+
+      // 嘗試抓取台灣語音
+      const voices = window.speechSynthesis.getVoices();
+      const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh_TW');
+      if (twVoice) {
+        utterance.voice = twVoice; 
+      } else {
+        utterance.lang = 'zh-TW'; 
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("您的裝置不支援發音功能");
+    }
+  }
 
   function updateCard() {
-    cardElement.classList.remove('is-flipped');
-    setTimeout(() => {
       const data = pokemonData[currentIndex];
-      
       textContainer.innerHTML = renderZhuyin(data.name);
-      
       idHintElement.innerText = `No. ${data.id}`;
-      imgElement.src = `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${data.id}.png`;
-      counterElement.innerText = `目前顯示: No. ${data.id}`;
-    }, 200);
+      // 先清空 src 防止顯示舊圖，體驗較好
+      imgElement.src = "";
+      setTimeout(() => {
+        imgElement.src = `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${data.id}.png`;
+      }, 10);
   }
 
   function nextCard() {
@@ -599,12 +665,36 @@
 
   window.onclick = function(event) { if (event.target == modalElement) toggleList(); }
 
+  // 鍵盤支援
   document.addEventListener('keydown', (e) => {
     if(modalElement.style.display === "flex") return;
     if (e.key === 'ArrowRight') nextCard();
     if (e.key === 'ArrowLeft') prevCard();
-    if (e.key === ' ' || e.key === 'Enter') flipCard();
+    if (e.key === ' ' || e.key === 'Enter') speakName(); // 空白鍵發音
   });
+
+  // 4. 動態生成 Manifest (Android APP 支援)
+  const manifest = {
+    "name": "寶可夢圖鑑",
+    "short_name": "寶可夢",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#f0f8ff",
+    "theme_color": "#f0f8ff",
+    "icons": [
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/287/287221.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  const linkTag = document.createElement('link');
+  linkTag.rel = 'manifest';
+  linkTag.href = manifestURL;
+  document.head.appendChild(linkTag);
 </script>
 
 </body>
