@@ -571,35 +571,47 @@
     return html;
   }
 
-  // 發音功能 (修正版：使用同音字修正破音字問題)
+  // 發音功能 (針對 iPhone 優化：強制使用「美佳」語音)
   function speakName() {
-    const name = pokemonData[currentIndex].name;
-    
-    // ★★★ 發音修正區 ★★★
-    // 建立一個專門給喇叭讀的字串 (speakText)
-    let speakText = name;
+    // 1. 取得原始名稱
+    let speakText = pokemonData[currentIndex].name;
 
-    // 如果名字裡有「殼」，唸的時候偷偷換成「咳」(ㄎㄜˊ)，騙語音引擎發這個音
-    // 這樣聽起來就是正確的「甲殼(ㄎㄜˊ)」了
-    if (speakText.includes('殼')) {
-      speakText = speakText.replace(/殼/g, '咳');
-    }
-    // ★★★★★★★★★★★★★
+    // 備註：暫時移除「殼->咳」的替換，因為那可能會導致 iPhone 的語調變得斷續奇怪。
+    //我們先優先解決「聲音難聽」的問題。
 
     if ('speechSynthesis' in window) {
+      // 停止上一句
       window.speechSynthesis.cancel();
       
-      // 注意：這裡傳入的是 speakText (替換過的字)，而不是原本的 name
-      const utterance = new SpeechSynthesisUtterance(speakText); 
+      const utterance = new SpeechSynthesisUtterance(speakText);
       
-      utterance.rate = 0.9; 
+      // ★ 關鍵設定：語速調回 1.0 (iPhone 0.9 會變調)
+      utterance.rate = 1.0; 
+      utterance.pitch = 1.0; // 音高標準
 
-      // 嘗試抓取台灣語音
+      // 2. 抓取所有可用聲音
       const voices = window.speechSynthesis.getVoices();
-      const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh_TW');
-      if (twVoice) {
-        utterance.voice = twVoice; 
+      
+      // ★ 搜尋策略：
+      // 第一順位：找 iPhone/Mac 的高品質台灣語音 "Meijia" (美佳)
+      // 第二順位：找 Android 的高品質語音 "Google"
+      // 第三順位：找任何標記為台灣 (zh-TW) 的聲音
+      let targetVoice = voices.find(v => v.name.includes('Meijia') || v.name.includes('美佳'));
+      
+      if (!targetVoice) {
+         targetVoice = voices.find(v => v.name.includes('Google') && (v.lang === 'zh-TW' || v.lang === 'zh_TW'));
+      }
+      
+      if (!targetVoice) {
+         targetVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh_TW');
+      }
+
+      // 如果有找到特定的好聲音，就指定使用
+      if (targetVoice) {
+        utterance.voice = targetVoice;
+        // console.log("使用聲音：", targetVoice.name); // 測試用
       } else {
+        // 沒找到就用通用設定
         utterance.lang = 'zh-TW'; 
       }
 
@@ -607,6 +619,14 @@
     } else {
       alert("您的裝置不支援發音功能");
     }
+  }
+
+  // ★ 強制 iPhone 載入聲音列表的補丁 (請務必保留這段)
+  if ('speechSynthesis' in window) {
+    // iPhone 有時候第一次會抓不到聲音列表，加入這個監聽器可以確保載入
+    window.speechSynthesis.onvoiceschanged = function() {
+      window.speechSynthesis.getVoices();
+    };
   }
 
   function updateCard() {
